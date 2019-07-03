@@ -11,7 +11,7 @@ export default class LocalLogin {
     this.app.post('/', this.loginController)
     // this.app.get('/', this.initApp, this.authLocal)
   }
-  
+
 
   loginController = async (req, res, next) => {
     let request = req.body
@@ -43,6 +43,6 @@ export default class LocalLogin {
       iat: new Date().getTime()
     };
     const SECRET = "MY_SECRET_KEY"
-    res.status(200).send({ message: 'success', accessToken: jwt.encode(payload, SECRET) })
+    res.status(200).send({ message: 'success', accessToken: jwt.encode(payload, SECRET), successful: true })
   }
 }

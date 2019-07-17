@@ -1,6 +1,7 @@
 import express from 'express'
 import schema from 'schm'
 import passport from 'passport'
+import moment from 'moment'
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt'
 
 export class MiddleWareLogin {
@@ -17,10 +18,12 @@ export class MiddleWareLogin {
         secretOrKey: SECRET,//SECRETเดียวกับตอนencodeในกรณีนี้คือ MY_SECRET_KEY
       }
       const jwtAuth = new JwtStrategy(jwtOptions, (payload, done) => {
-        
-        console.log(payload)
-        if (payload.accessToken === "test") {
-          return done(null, true)
+        const timeNow = moment().format('x')
+        const checkExpire = payload.expires_in - timeNow
+        if (checkExpire > 0) {
+          if (payload.accessToken === "test") {
+            return done(null, true)
+          }
         }
         else {
           return done(null, false)
@@ -29,13 +32,12 @@ export class MiddleWareLogin {
 
       passport.use(jwtAuth)
       passport.authenticate('jwt', { session: false }, function (err, status, info) {
-        console.log('status',status)
+        console.log('status', status)
         console.log(err, info)
-        console.log(req.headers.authorization.split(' '))
-        if(status){
+        if (status) {
           res.status(200).send({ message: 'success', accessToken: req.headers.authorization.split(' ')[1], successful: true })
-        }else{
-          console.log('aaaa',status)
+        } else {
+          console.log('aaaa', status)
           next()
         }
       })(req, res, next)
@@ -43,14 +45,6 @@ export class MiddleWareLogin {
       console.log(err)
       next()
     }
-  }
-  checkAccessToken = async (req, res, next) => {
-   
-    passport.authenticate('jwt', { session: false }, function (err, user, info) {
-      console.log(user)
-      console.log(err, info)
-      res.status(404).send('req.user.profile')
-    })(req, res, next)
   }
 
   checkParam = async (req, res, next) => {

@@ -14,7 +14,6 @@ const opts = {
   , rejectUnauthorized: false
   , ca: [fs.readFileSync('/app/cert/server_cert.pem')]
 }
-// console.log(opts)
 export default class Express {
   constructor() {
     this.express = express()
@@ -23,17 +22,7 @@ export default class Express {
     this.express.disable('etag')
   }
 
-  useLogin() {
-    this.express.post('/login', (req, res, next) => { res.status(200).send({ message: 'success' }) })
-  }
-
-  useRoute = () => {
-    // this.express.use('/', (req, res, next) => {
-    //   next()
-    // }, router.Root)
-    // this.express.get('/', (req, res) => {
-    //   res.send('<a href="authenticate">Log in using client certificate</a>')
-    // })
+  useRouteSSL = () => {
     this.express.use('/', (req, res, next) => {
       const cert = req.connection.getPeerCertificate()
       if (req.client.authorized) {
@@ -49,10 +38,21 @@ export default class Express {
     }, router.Root)
   }
 
+  useRoute = () => {
+    this.express.use('/', (req, res, next) => {
+      next()
+    }, router.Root)
+  }
+
   listen() {
+    // this.useRouteSSL()
+    // https.createServer(opts, this.express).listen(process.env.PORT, () => {
+    //   console.log(process.env.NODE_ENV)
+    //   console.log(`App listening on port ${constants.ENV.PORT}!`);
+    // })
+
     this.useRoute()
-    // this.useLogin()
-    https.createServer(opts, this.express).listen(process.env.PORT, () => {
+    this.express.listen(process.env.PORT, () => {
       console.log(process.env.NODE_ENV)
       console.log(`App listening on port ${constants.ENV.PORT}!`);
     })

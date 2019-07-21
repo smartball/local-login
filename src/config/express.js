@@ -14,7 +14,7 @@ const opts = {
   , rejectUnauthorized: false
   , ca: [fs.readFileSync('/app/cert/server_cert.pem')]
 }
-console.log(opts)
+// console.log(opts)
 export default class Express {
   constructor() {
     this.express = express()

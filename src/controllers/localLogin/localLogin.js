@@ -6,6 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import { MiddleWareLogin } from '../../middleware'
 import { LoginName, OauthUsers, Users } from '../../models'
+import { responseMessage } from '../../utils'
 
 export default class LocalLogin {
   constructor() {
@@ -20,7 +21,7 @@ export default class LocalLogin {
     const checkUserLogin = await LoginName.findOne({ username: request.username })
     try {
       if (!checkUserLogin) {
-        return res.status(401).send({ message: 'username หรือ password ไม่ถูกต้อง', successful: false })
+        return res.status(401).send(responseMessage(401, { errorMessage: 'username หรือ password ไม่ถูกต้อง' }))
       } else {
         request.id = checkUserLogin.id
         let oauthUser = await OauthUsers.findOne({ username: request.id })
@@ -30,7 +31,7 @@ export default class LocalLogin {
         // console.log(dataUser)
         if (sha1(request.password) === dataUser.password) {
           if (dataUser.is_banned === 1) {
-            return res.status(401).send({ message: 'คุณโดนแบน กรุณาติดต่อผู้ที่เกี่ยวข้อง', successful: false })
+            return res.status(401).send(responseMessage(401, { errorMessage: 'คุณโดนแบน กรุณาติดต่อผู้ที่เกี่ยวข้อง' }))
           } else {
             req.loginName = checkUserLogin
             req.dataUser = dataUser
@@ -38,25 +39,18 @@ export default class LocalLogin {
             next()
           }
         } else {
-          return res.status(401).send({ message: 'username หรือ password ไม่ถูกต้อง', successful: false })
+          return res.status(401).send(responseMessage(401, { errorMessage: 'username หรือ password ไม่ถูกต้อง' }))
         }
       }
     } catch (err) {
       console.log(err)
-      res.status(500).send({ message: 'something wrong!!', successful: false })
+      res.status(500).send(responseMessage(500, { errorMessage: 'Something wrong!!' }))
     }
   }
 
   generateJwt = (req, res, next) => {
     const expires_in = moment().utcOffset(7).add(1, 'hours')
     const privateKEY = fs.readFileSync(path.join(__dirname, '../../utils/constants/key/private.key'))
-    const signOptions = {
-      issuer: 'dp-lotto',
-      subject: 'some@user.com',
-      audience: 'http://example.com',
-      expiresIn: '12h',
-      algorithm: 'RS256'
-    }
     const payload = {
       user_id: req.loginName.user_id,
       username: req.loginName.username,
@@ -68,6 +62,6 @@ export default class LocalLogin {
       iat: new Date().getTime()
     }
     let token = jwt.sign(payload, privateKEY, { algorithm: 'RS256' })
-    res.status(200).send({ message: 'success', accessToken: token, successful: true })
+    res.status(200).send(responseMessage(200, { accessToken: token }))
   }
 }

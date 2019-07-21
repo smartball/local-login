@@ -6,6 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import jwt from 'jsonwebtoken'
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt'
+import { responseMessage } from '../utils'
 
 export class MiddleWareLogin {
   constructor() {
@@ -15,7 +16,6 @@ export class MiddleWareLogin {
 
   initApp = async (req, res, next) => {
     try {
-      const SECRET = "MY_SECRET_KEY"
       const publicKEY = fs.readFileSync(path.join(__dirname, '../utils/constants/key/public.key'))
       const jwtOptions = {
         jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -25,12 +25,14 @@ export class MiddleWareLogin {
       const jwtAuth = new JwtStrategy(jwtOptions, (payload, done) => {
         const timeNow = moment().format('x')
         const checkExpire = payload.expires_in - timeNow
+        console.log(checkExpire)
         if (checkExpire > 0) {
           if (payload.accessToken === "test") {
             return done(null, true)
           }
-        }
-        else {
+        } else if (checkExpire < 0) {
+          return done(null, 'expires')
+        } else {
           return done(null, false)
         }
       })
@@ -40,9 +42,12 @@ export class MiddleWareLogin {
         console.log('status', status)
         console.log(err, info)
         if (status) {
-          res.status(200).send({ message: 'success', accessToken: req.headers.authorization.split(' ')[1], successful: true })
+          if (status === 'expires') {
+            res.status(401).send(responseMessage(401, { errorMessage: 'The access token is expires.' }))
+          } else {
+            res.status(200).send(responseMessage(200, { accessToken: req.headers.authorization.split(' ')[1] }))
+          }
         } else {
-          console.log('aaaa', status)
           next()
         }
       })(req, res, next)
@@ -68,7 +73,7 @@ export class MiddleWareLogin {
         messageErrList.push(fieldErr[0])
       })
       msgRequire = `${messageErrList.toString().replace(/,/g, ' | ')} is required`
-      res.status(404).send({ message: msgRequire })
+      res.status(404).send(responseMessage(404, { errorMessage: msgRequire }))
     }
   }
 }

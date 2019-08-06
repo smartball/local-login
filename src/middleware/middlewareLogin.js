@@ -23,8 +23,8 @@ export class MiddleWareLogin {
         algorithms: ['RS256'],
       }
       const jwtAuth = new JwtStrategy(jwtOptions, (payload, done) => {
-        const timeNow = moment().format('x')
-        const checkExpire = payload.expires_in - timeNow
+        const timeNow = moment().utcOffset(7).format('x')
+        const checkExpire = moment(payload.expires_in).format('x') - timeNow
         console.log(checkExpire)
         if (checkExpire > 0) {
           if (payload.accessToken === "test") {

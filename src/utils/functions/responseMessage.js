@@ -28,7 +28,7 @@ export const responseMessage = (status, data) => {
       break
     case 500:
       message = {
-        statusCode: 404,
+        statusCode: 500,
         message: data.errorMessage
       }
       break

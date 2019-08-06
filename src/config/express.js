@@ -7,13 +7,13 @@ import fs from 'fs'
 import * as router from '../routes'
 import * as constants from '../utils/constants'
 
-const opts = {
-  key: fs.readFileSync('/app/cert/server_key.pem')
-  , cert: fs.readFileSync('/app/cert/server_cert.pem')
-  , requestCert: true
-  , rejectUnauthorized: false
-  , ca: [fs.readFileSync('/app/cert/server_cert.pem')]
-}
+// const opts = {
+//   key: fs.readFileSync('/app/cert/server_key.pem')
+//   , cert: fs.readFileSync('/app/cert/server_cert.pem')
+//   , requestCert: true
+//   , rejectUnauthorized: false
+//   , ca: [fs.readFileSync('/app/cert/server_cert.pem')]
+// }
 export default class Express {
   constructor() {
     this.express = express()

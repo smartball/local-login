@@ -1,5 +1,6 @@
 import express from 'express'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
 import sha1 from 'sha1'
 import moment from 'moment'
 import fs from 'fs'
@@ -25,10 +26,8 @@ export default class LocalLogin {
       } else {
         request.id = checkUserLogin.id
         let oauthUser = await OauthUsers.findOne({ username: request.id })
-        // console.log('checkUserLogin==========', oauthUser)
         let dataUser = await Users.findOne({ id: request.id })
-        dataUser = { ...dataUser._doc, ...oauthUser._doc }
-        // console.log(dataUser)
+        dataUser = { ...dataUser, ...oauthUser }
         if (sha1(request.password) === dataUser.password) {
           if (dataUser.is_banned === 1) {
             return res.status(401).send(responseMessage(401, { errorMessage: 'คุณโดนแบน กรุณาติดต่อผู้ที่เกี่ยวข้อง' }))
@@ -48,7 +47,7 @@ export default class LocalLogin {
     }
   }
 
-  generateJwt = (req, res, next) => {
+  generateJwt = async (req, res, next) => {
     const expires_in = moment().utcOffset(7).add(1, 'hours')
     const privateKEY = fs.readFileSync(path.join(__dirname, '../../utils/constants/key/private.key'))
     const payload = {
@@ -61,6 +60,7 @@ export default class LocalLogin {
       expires_in: expires_in.format('x'),
       iat: new Date().getTime()
     }
+    const response = await LoginName.updateById(req.loginName._id, { access_timestamp: moment().utcOffset(7).format('YYYY-MM-DD HH:mm:SSS'), updated_at: moment().utcOffset(7).format('YYYY-MM-DD HH:mm:SSS') })
     let token = jwt.sign(payload, privateKEY, { algorithm: 'RS256' })
     res.status(200).send(responseMessage(200, { accessToken: token }))
   }
